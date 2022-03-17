@@ -1,23 +1,78 @@
-import logo from './logo.svg';
 import './App.css';
+import React, { useState, useEffect } from 'react';
 
 function App() {
+
+  const [currUser, setCurrUser] = useState(0)
+  const [currImg, setCurrImg] = useState([
+    {name: "gaearon"},
+    {name: "acdlite"},
+    {name: "yyx990803"},
+    {name: "unclebob"},
+    {name: "martinfowler"}
+  ])
+  const [loading, setLoading] = useState(false)
+
+  const nextImg = () => {
+    if (currUser == currImg.length - 1) {
+      setCurrUser(0)
+    } else {
+      setCurrUser(currUser + 1)
+    }
+  }
+
+  const previousImg = () => {
+    if (currUser == 0) {
+      setCurrUser(currImg.length - 1)
+    } else {
+      setCurrUser(currUser - 1)
+    }
+  }
+
+
+  useEffect(() => {
+    if (!currImg[currUser].avatar) {
+      setLoading(true)
+      fetch(`https://api.github.com/users/${currImg[currUser].name}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.login == currImg[currUser].name) {
+            let avatars = currImg;
+            avatars[currUser] = {...avatars[currUser], avatar: data.avatar_url};
+            setCurrImg(avatars);
+          }
+          setLoading(false)
+        });
+    }
+  }, [currUser])
+
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+      <div className="gallery">
+        <h1>{currImg[currUser].name}</h1>
+        {loading ?
+          <div className="galleryDisp">
+            <p>Loading...</p>
+          </div>
+          :
+          <div className="galleryDisp">
+            <img src = {currImg[currUser].avatar} alt = "avatar"></img>
+          </div>
+        }
+      </div>
+      <div className="buttons">
+        <button 
+          onClick={previousImg}
         >
-          Learn React
-        </a>
-      </header>
+          Previous
+        </button>
+        <button
+          onClick={nextImg}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }
